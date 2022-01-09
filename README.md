@@ -28,7 +28,8 @@ Just quote me in a comment: u/averagerBot
 
 **What limitation do I have?**
 
-- I can be summoned by the mods allowed in the config file.
+- I can only be summoned in the subreddits mentions in the config file and by the moderators of subreddit.
+- If I am summoned back to back, I will get slow due to rate limiting. 
 
 # Configuration 
 

@@ -46,17 +46,20 @@ def calculate_statistics(submission, bot_config):
                 logging.info(f"Comment: \"{comment_preview}...\" -> Extraction: {rating_str.group()} Conversion: -> {rating:.2f}")
                 all_ratings.append(rating)
 
-    submission_stats = {':num_ratings:': len(all_ratings),
-                        ':mean:': mean(all_ratings),
-                        ':mode:': mode(all_ratings),
-                        ':median:': median(all_ratings),
-                        ':stdev:': stdev(all_ratings),
-                        ':max:': max(all_ratings),
-                        ':min:': min(all_ratings)}
+    if len(all_ratings):
+        submission_stats = {':num_ratings:': len(all_ratings),
+                            ':mean:': mean(all_ratings),
+                            ':mode:': mode(all_ratings),
+                            ':median:': median(all_ratings),
+                            ':stdev:': stdev(all_ratings),
+                            ':max:': max(all_ratings),
+                            ':min:': min(all_ratings)}
 
-    response = bot_config['comment']
-    for key, value in submission_stats.items():
-        response = response.replace(f"{key}", f"{value:.2f}")
+        response = bot_config['comment']
+        for key, value in submission_stats.items():
+            response = response.replace(f"{key}", f"{value:.2f}")
+    else:
+        response = "The bot could not find any ratings in the comment section. Please try again later."
 
     response = f"{response}\n\n^(This action was performed by a bot, please contact the mods for any questions. For info on bot, check out my Reddit profile.)"
     return response
@@ -67,7 +70,8 @@ def mention_listener(reddit, bot_config):
         try:
             for mention in praw.models.util.stream_generator(reddit.inbox.mentions, skip_existing=True):
                 logging.info(f"Bot mentioned by u/{mention.author} in comment {mention.id} and subreddit r/{mention.subreddit}.")
-                if is_mod(mention.author, bot_config['subreddits']):
+
+                if is_mod(mention.author, bot_config['subreddits']) and str(mention.subreddit).lower() in [sub.lower() for sub in bot_config['subreddits']]:
                     response = calculate_statistics(reddit.submission(mention.submission), bot_config)
                     mention.reply(response)
         except praw.exceptions.APIException:
@@ -91,6 +95,6 @@ def main():
 
 
 if __name__ == '__main__':
-    # To make the script verbose set level=logging.INFO
+    # To make the script verbose set level=logging.WARN
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s: %(message)s')
     main()
