@@ -1,0 +1,18 @@
+reddit_credentials:
+  username: fakebot1
+  password: invalidht4wd50gk
+  client_id: revokedpDQy3xZ
+  client_secret: revokedoqsMk5nHCJTHLrwgvHpr
+
+subreddits: ["subreddit1", "subreddit"]
+comment: |
+  I was able to extract :num_ratings: rating(s) from the comments. Here are the statistics for this submission at the moment.
+  
+  - Average: :mean:
+  - Mode: :mode:
+  - Median: :median:
+  - Highest Rating: :max:
+  - Lowest Rating: :min:
+  - Standard Deviation: :stdev:
+  
+  Note: In case of high standard devition, average might not be a good assement of rating. In that case, median and mode will be more reliable.
