@@ -44,10 +44,10 @@ To configure me, edit the yaml file template provided.
 
 ```yaml
 reddit_credentials:
-  username: fakebot1
-  password: invalidht4wd50gk
-  client_id: revokedpDQy3xZ
-  client_secret: revokedoqsMk5nHCJTHLrwgvHpr
+  username: "fakebot1"
+  password: "invalidht4wd50gk"
+  client_id: "revokedpDQy3xZ"
+  client_secret: "revokedoqsMk5nHCJTHLrwgvHpr"
 
 subreddits: ["subreddit1", "subreddit"]
 comment: |
