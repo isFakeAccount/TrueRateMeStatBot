@@ -5,6 +5,7 @@ from statistics import mean, mode, median, stdev
 
 import praw
 from yaml import safe_load
+from tqdm import tqdm
 
 
 def is_mod(author, subreddits: list) -> bool:
@@ -27,7 +28,7 @@ def calculate_statistics(submission, bot_config):
     all_ratings = []
     rating_regex = re.compile(r"\d+(\.\d+)?(-\d+(\.\d+)?)?", re.IGNORECASE)
     submission.comments.replace_more(limit=None)
-    for top_level_comment in submission.comments:
+    for top_level_comment in tqdm(submission.comments, desc="Reading top level comments"):
         # Skip over the comments by OP
         if top_level_comment.author == submission.author:
             continue
@@ -43,7 +44,7 @@ def calculate_statistics(submission, bot_config):
             # Throwing away ratings more than 10 since the scale is not correct.
             if rating <= 10.0:
                 comment_preview = top_level_comment.body[:10].replace("\n", "")
-                logging.info(f"Comment: \"{comment_preview}...\" -> Extraction: {rating_str.group()} Conversion: -> {rating:.2f}")
+                logger.debug(f"Comment: \"{comment_preview}...\" -> Extraction: {rating_str.group()} Conversion: -> {rating:.2f}")
                 all_ratings.append(rating)
 
     if len(all_ratings):
@@ -69,15 +70,15 @@ def mention_listener(reddit, bot_config):
     while True:
         try:
             for mention in praw.models.util.stream_generator(reddit.inbox.mentions, skip_existing=True):
-                logging.info(f"Bot mentioned by u/{mention.author} in comment {mention.id} and subreddit r/{mention.subreddit}.")
+                logger.info(f"Bot mentioned by u/{mention.author} in comment {mention.id} and subreddit r/{mention.subreddit}.")
 
                 if is_mod(mention.author, bot_config['subreddits']) and str(mention.subreddit).lower() in [sub.lower() for sub in bot_config['subreddits']]:
-                    response = calculate_statistics(reddit.submission(mention.submission), bot_config)
+                    response = calculate_statistics(reddit.submission('nhe3a5'), bot_config)
                     mention.reply(response)
         except praw.exceptions.APIException:
-            logging.error("Reddit Error. If the HTTP Error is 5XX then the issue is with reddit servers. 4XX Error are client errors.", exc_info=True)
+            logger.error("Reddit Error. If the HTTP Error is 5XX then the issue is with reddit servers. 4XX Error are client errors.", exc_info=True)
         except Exception:
-            logging.critical("Something went wrong, please contact bot dev (u/is_fake_Account).", exc_info=True)
+            logger.critical("Something went wrong, please contact bot dev (u/is_fake_Account).", exc_info=True)
 
 
 def main():
@@ -90,11 +91,19 @@ def main():
                          username=bot_config['reddit_credentials']['username'],
                          password=bot_config['reddit_credentials']['password'],
                          user_agent=f"{platform.platform()}:TrueRateMeStatsCalculator by (u/is_fake_Account)")
-    logging.info(f"Logged in as Reddit User {reddit.user.me()}.")
+    logger.info(f"Logged in as Reddit User {reddit.user.me()}.")
     mention_listener(reddit, bot_config)
 
 
 if __name__ == '__main__':
-    # To make the script verbose set level=logging.WARN
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s: %(message)s')
+    # Setting up root logger
+    logger = logging.getLogger("TrueRateMeStatBot")
+    logger.setLevel(logging.DEBUG)
+
+    # Setting up the streaming
+    log_stream = logging.StreamHandler()
+    log_stream.setLevel(logging.INFO)   # To make the script verbose set level=logging.DEBUG
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s: %(message)s')
+    log_stream.setFormatter(formatter)
+    logger.addHandler(log_stream)
     main()
