@@ -73,7 +73,7 @@ def mention_listener(reddit, bot_config):
                 logger.info(f"Bot mentioned by u/{mention.author} in comment {mention.id} and subreddit r/{mention.subreddit}.")
 
                 if is_mod(mention.author, bot_config['subreddits']) and str(mention.subreddit).lower() in [sub.lower() for sub in bot_config['subreddits']]:
-                    response = calculate_statistics(reddit.submission('nhe3a5'), bot_config)
+                    response = calculate_statistics(mention.submission, bot_config)
                     mention.reply(response)
         except praw.exceptions.APIException:
             logger.error("Reddit Error. If the HTTP Error is 5XX then the issue is with reddit servers. 4XX Error are client errors.", exc_info=True)
@@ -102,7 +102,7 @@ if __name__ == '__main__':
 
     # Setting up the streaming
     log_stream = logging.StreamHandler()
-    log_stream.setLevel(logging.INFO)   # To make the script verbose set level=logging.DEBUG
+    log_stream.setLevel(logging.INFO)   # To make the script verbose set level to logging.DEBUG
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s: %(message)s')
     log_stream.setFormatter(formatter)
     logger.addHandler(log_stream)
