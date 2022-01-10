@@ -24,13 +24,13 @@ def is_mod(author, subreddits: list) -> bool:
             return False
 
 
-def calculate_statistics(submission, bot_config):
+def calculate_statistics(submission, bot_config, skip_op):
     all_ratings = []
     rating_regex = re.compile(r"\d+(\.\d+)?(-\d+(\.\d+)?)?", re.IGNORECASE)
     submission.comments.replace_more(limit=None)
     for top_level_comment in tqdm(submission.comments, desc="Reading top level comments"):
         # Skip over the comments by OP
-        if top_level_comment.author == submission.author:
+        if skip_op and top_level_comment.author == submission.author:
             continue
 
         if rating_str := rating_regex.match(top_level_comment.body.replace(" ", "")):
@@ -73,7 +73,8 @@ def mention_listener(reddit, bot_config):
                 logger.info(f"Bot mentioned by u/{mention.author} in comment {mention.id} and subreddit r/{mention.subreddit}.")
 
                 if is_mod(mention.author, bot_config['subreddits']) and str(mention.subreddit).lower() in [sub.lower() for sub in bot_config['subreddits']]:
-                    response = calculate_statistics(mention.submission, bot_config)
+                    skip_op = True if "--ignore-op" in mention.body.lower() else False
+                    response = calculate_statistics(mention.submission, bot_config, skip_op)
                     mention.reply(response)
         except praw.exceptions.APIException:
             logger.error("Reddit Error. If the HTTP Error is 5XX then the issue is with reddit servers. 4XX Error are client errors.", exc_info=True)
